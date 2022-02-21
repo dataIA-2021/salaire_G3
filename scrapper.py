@@ -15,6 +15,9 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import csv
+from pymongo import MongoClient
+from random import random
+from time import sleep
 
 class Scrapper():
 
@@ -23,21 +26,27 @@ class Scrapper():
     city = ['Paris','Lyon','Toulouse','Nantes','Bordeaux','Tours']
 
     # constructeur
-    def __init__(self,position='data scientist',location='Paris',allPages=False):
+    def __init__(self,position='data analyst',location='',allPages=False):
         
         self.position = position
         self.location = location
         self.records = [] # init de la liste des enregistrements
         
         url = self.getUrl(self.template)
+        print(url)
 
         # Par defaut, parcours de toutes les pages 
         while True:
             response = requests.get(url)
-            
             soup = BeautifulSoup(response.text, 'html.parser')
+            #print(soup)
+            
+            if soup.find('div','h-captcha') is not None:
+                print('Attention, présence d\'un captcha !')
+                #break
             
             mosaic = soup.find('div','mosaic-provider-jobcards')
+
             self.cards = mosaic.find_all('a','tapItem')
 
             # Construction du jeu d'enregistrement
@@ -48,6 +57,9 @@ class Scrapper():
             # Si toutes les pages (allPages) non precise, sortie
             if allPages == False:
                 break
+            else:
+                # pause avant la prochaine page
+                self.sleepForRandomInterval()
             
             try:
                 url = 'https://www.indeed.fr' + soup.find('a', {'aria-label': 'Suivant'}).get('href')
@@ -67,7 +79,14 @@ class Scrapper():
         
         _id = card['data-jk']
         job_title = topCard.find('h2','jobTitle').text # Titre du poste
-        company = topCard.find('div', 'companyInfo').find('span','companyName').text # Nom de l'entreprise
+        
+        # Correction bug si non presence de la company
+        try:
+            company = topCard.find('div', 'companyInfo').find('span','companyName').text # Nom de l'entreprise
+        except AttributeError:
+            company = ''
+        
+        
         job_location = topCard.find('div', 'companyLocation').text # localisation
         
         salary = topCard.find('div','salary-snippet') # Dans le cas d'une offre avec le salaire precise
@@ -99,16 +118,21 @@ class Scrapper():
         data = json.loads(relevant) #a dictionary!
         print(json.dumps(data, indent=4))
     
-    def exportJSONFile(self):
+    def sleepForRandomInterval(self):
+        seconds = random() * 10
+        sleep(seconds)
+    
+    def exportMongoDB(self):
         
-        output = []
+        """Connection MongoDB"""
+        client = MongoClient('mongodb://%s:%s' % ('127.0.0.1','27017'))
+        db = client['grp3_salaire']
+        collec = db['test_pirateur']
         
         # Mise en forme JSON et insertion dans une liste avant export
         for record in self.records:
             data = {
-                '_id': {
-                    '$oid':record[0]
-                },
+                '_id':record[0],
                 'job_title': record[1],
                 'company': record[2],
                 'job_location': record[3],
@@ -116,8 +140,8 @@ class Scrapper():
                 'summary': record[5],
                 'post_date': record[6]
             }
-            output.append(data)
+            collec.insert_one(data)
         
         # Export du fichier JSON avec la liste output
-        with open('data.json', 'w',encoding='utf-8') as f:
-            json.dump(output,f, indent = 4,ensure_ascii=False)
+        #with open('data.json', 'w',encoding='utf-8') as f:
+            #json.dump(output,f, indent = 4,ensure_ascii=False)
