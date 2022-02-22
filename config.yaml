@@ -1,0 +1,11 @@
+MONGODB_TEST:
+    ip: 127.0.0.1
+    port: 27017
+    client: 'grp3_salaire'
+    db: 'test_pirateur'
+        
+MONGODB_PROD:
+    ip: 'data-salaries:b8FVZBOSzwVrx3Fgbtbb7lDCTO0eDQN5mf0beVoZDPezcZWcWNa8mX5gxLm0sx9iGCvulnMY30uiYP4oEdVYpw==@data-salaries.mongo.cosmos.azure.com'
+    port: 10255
+    client: 'detect_salaire'
+    db: 'data'

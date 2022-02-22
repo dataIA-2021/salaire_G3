@@ -18,32 +18,54 @@ import csv
 from pymongo import MongoClient
 from random import random
 from time import sleep
+#from torrequest import TorRequest
+import yaml
+import jobs
 
 class Scrapper():
-
-    template = 'https://www.indeed.fr/jobs?q={}&l={}' # Constante de classe
-    job = ['developer','data scientist','data analyst','business intelligence']
-    city = ['Paris','Lyon','Toulouse','Nantes','Bordeaux','Tours']
-
+    
+    # Constante de classe
+    TEMPLATE = 'https://www.indeed.fr/jobs?q={}&l={}' 
+    JOBS = jobs.getListJobs() # Import des jobs
+    
     # constructeur
-    def __init__(self,position='data analyst',location='',allPages=False):
+    def __init__(self,allPages):
         
-        self.position = position
-        self.location = location
-        self.records = [] # init de la liste des enregistrements
+        self._allPages = allPages
         
-        url = self.getUrl(self.template)
-        print(url)
+        # Connection MongoDB
+        with open('config.yaml','r') as f:
+            config = yaml.safe_load(f)
+        
+        mg = config['MONGODB_TEST'] # Changer ici pour TEST/PROD
+        connexion = f"mongodb://{mg['ip']}:{mg['port']}"
+        client = MongoClient(connexion)
+        db = client[mg['client']]
+        self.collec = db[mg['db']]
 
+    def launch(self):
+        
+        if self._allPages == True:
+            for job in self.JOBS:
+                self.browseWeb(job)
+        else:
+            self.browseWeb(self.JOBS[0]) # Le premier job par defaut
+                
+        print('Fin webscrapping')
+        
+    def browseWeb(self,job):
+        self.position = job
+        self.location = 'France' # par defaut
+        self.records = [] # init de la liste des enregistrements
+        nbPage = 1
+        
+        url = self.getUrl(self.TEMPLATE)
+        print(url)
+        
         # Par defaut, parcours de toutes les pages 
         while True:
             response = requests.get(url)
             soup = BeautifulSoup(response.text, 'html.parser')
-            #print(soup)
-            
-            if soup.find('div','h-captcha') is not None:
-                print('Attention, présence d\'un captcha !')
-                #break
             
             mosaic = soup.find('div','mosaic-provider-jobcards')
 
@@ -53,19 +75,25 @@ class Scrapper():
             for card in self.cards:
                 record = self.getRecord(card)
                 self.records.append(record)
+                #self.sleepForRandomInterval()
                 
-            # Si toutes les pages (allPages) non precise, sortie
-            if allPages == False:
-                break
-            else:
-                # pause avant la prochaine page
-                self.sleepForRandomInterval()
+            self.exportMongoDB()
+            self.records.clear() # Reinitialisation des records
             
+            print(nbPage,' page(s) terminée(s)') # log
+            
+            # Si toutes les pages (allPages) non precise, sortie
+            if self._allPages == False:
+                break
+            else: 
+                self.sleepForRandomInterval() # pause avant la prochaine page
+                nbPage += 1
+                
             try:
                 url = 'https://www.indeed.fr' + soup.find('a', {'aria-label': 'Suivant'}).get('href')
             except AttributeError:
                 break
-        
+
     def getUrl(self,template):
         position = self.position.replace(' ', '+')
         location = self.location.replace(' ', '+')
@@ -124,11 +152,6 @@ class Scrapper():
     
     def exportMongoDB(self):
         
-        """Connection MongoDB"""
-        client = MongoClient('mongodb://%s:%s' % ('127.0.0.1','27017'))
-        db = client['grp3_salaire']
-        collec = db['test_pirateur']
-        
         # Mise en forme JSON et insertion dans une liste avant export
         for record in self.records:
             data = {
@@ -140,8 +163,7 @@ class Scrapper():
                 'summary': record[5],
                 'post_date': record[6]
             }
-            collec.insert_one(data)
+            
+            if self.collec.count_documents({ "_id": record[0]}) == 0:
+                self.collec.insert_one(data)
         
-        # Export du fichier JSON avec la liste output
-        #with open('data.json', 'w',encoding='utf-8') as f:
-            #json.dump(output,f, indent = 4,ensure_ascii=False)
