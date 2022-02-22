@@ -6,18 +6,18 @@ Created on Wed Feb  9 12:23:13 2022
 """
 
 from pymongo import MongoClient
-# import yaml
+import yaml
 
-# with open ('acces.yml', 'r') as f:
-#     conf = yaml.safe_load(f)
-# my = conf['MONGO']
+with open ('acces.yml', 'r') as f:
+    conf = yaml.safe_load(f)
+my = conf['MONGO']
     
 """Connection MongoDB"""
-client = MongoClient('mongodb://%s:%s' % ('127.0.0.1','27017'))
+client = MongoClient('mongodb://%s:%s' % (conf['host'],conf['port']))
 db = client['grp3_salaire']
 collec = db['test_pirateur']
 
-# uri = "mongodb://data-salaries:b8FVZBOSzwVrx3Fgbtbb7lDCTO0eDQN5mf0beVoZDPezcZWcWNa8mX5gxLm0sx9iGCvulnMY30uiYP4oEdVYpw==@data-salaries.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@data-salaries@"
+# uri = conf['uri']
 # client = MongoClient(uri)
 # db = client['detect_salaire']
 # collec = db['data']
