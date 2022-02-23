@@ -21,6 +21,9 @@ from time import sleep
 #from torrequest import TorRequest
 import yaml
 import jobs
+import statistics
+import numpy as np
+import re
 
 class Scrapper():
     
@@ -80,8 +83,6 @@ class Scrapper():
             self.exportMongoDB()
             self.records.clear() # Reinitialisation des records
             
-            print(nbPage,' page(s) terminée(s)') # log
-            
             # Si toutes les pages (allPages) non precise, sortie
             if self._allPages == False:
                 break
@@ -93,6 +94,8 @@ class Scrapper():
                 url = 'https://www.indeed.fr' + soup.find('a', {'aria-label': 'Suivant'}).get('href')
             except AttributeError:
                 break
+            
+        print(nbPage,' page(s) scrappée(s)') # log
 
     def getUrl(self,template):
         position = self.position.replace(' ', '+')
@@ -106,7 +109,14 @@ class Scrapper():
         botCard = card.find('table','jobCardShelfContainer')
         
         _id = card['data-jk']
-        job_title = topCard.find('h2','jobTitle').text # Titre du poste
+        
+        job_pan = topCard.find('h2','jobTitle')
+        
+        # Cas d'une nouvelle annonce
+        if len(job_pan.find_all('span')) > 1:
+            job_title = job_pan.find_all('span')[1].text
+        else:
+            job_title = topCard.find('h2','jobTitle').text # Titre du poste
         
         # Correction bug si non presence de la company
         try:
@@ -159,11 +169,111 @@ class Scrapper():
                 'job_title': record[1],
                 'company': record[2],
                 'job_location': record[3],
+                'clean_location':'',
                 'salary': record[4],
+                'per_hour':0,
+                'per_day':0,
+                'per_week':0,
+                'per_month':0,
+                'per_year':0,
+                'min_salary':0,
+                'max_salary':0,
+                'mean_salary':0,
+                'monthly_salary':0,
+                'annual_salary':0,
                 'summary': record[5],
                 'post_date': record[6]
             }
+            data = self.cleanRecord(data)
             
             if self.collec.count_documents({ "_id": record[0]}) == 0:
                 self.collec.insert_one(data)
+    
+    # Nettoyage des enregistrement, partie de Tess        
+    def cleanRecord(self,data):
+        
+        # Traitement sur les salaires
+        salary = data['salary']
+        
+        # Si salary est renseigne
+        if salary:
+            
+            # Temps de travail
+            if 'par heure' in salary:
+                data['per_hour'] = 1
+            elif 'par jour' in salary:
+                data['per_day'] = 1
+            elif 'par semaine' in salary:
+                data['per_week'] = 1
+            elif 'par mois' in salary:
+                data['per_month'] = 1
+            elif 'par an' in salary:
+                data['per_year'] = 1
+                
+            # Remplacement
+            salary_range = salary
+            salary_range = salary_range.replace('€', '')
+            salary_range = salary_range.replace('par heure', '')
+            salary_range = salary_range.replace('par an', '')
+            salary_range = salary_range.replace('par mois', '')
+            salary_range = salary_range.replace('par semaine', '')
+            salary_range = salary_range.replace('par jour', '')
+            salary_range = salary_range.replace('18,14', '')
+            salary_range = salary_range.replace(' ','')
+            
+            # min/max
+            data['min_salary'] =  salary_range.split('-')[0]
+            if len(salary_range.split('-')) > 1 :
+                data['max_salary'] = salary_range.split('-')[1]
+                
+            # moyenne salaire
+            if int(data['min_salary']) > 0 and int(data['max_salary']) > 0:
+                data['mean_salary'] = statistics.mean([int(data['min_salary']),int(data['max_salary'])])
+            
+            # Calcul salaire mensuel
+            m1 = 'par heure' in salary
+            m2 = 'par jour' in salary
+            m3 = 'par semaine' in salary #par mois is a default value
+            m5 = 'par an' in salary
+            
+            data['monthly_salary'] = np.select([m1, m2, m3, m5],
+                                              [data['mean_salary']*152, #converting hourly to monthly
+                                               data['mean_salary']*22,   #converting daily to monthly                               
+                                               data['mean_salary']*4,    #weeklyly to monthly
+                                               data['mean_salary']/12],   #monthly to monthly
+                                               default=data['mean_salary']) #default value
+            
+            data['monthly_salary'] = 0 # TODO : A revoir par Tess
+            
+            # Calcul du salaire annuel
+            m1 = 'par heure' in salary
+            m2 = 'par jour' in salary
+            m3 = 'par semaine' in salary #par mois is a default value
+            m4 = 'par mois' in salary
+            
+            data['annual_salary'] = np.select([m1, m2, m3, m4],
+                                              [data['mean_salary']*1825, #converting hourly to annual
+                                               data['mean_salary']*260,   #converting daily to annual                               
+                                               data['mean_salary']*52,    #weeklyly to annual
+                                               data['mean_salary']*12],   #monthly to annual
+                                               default=data['mean_salary']) #default value
+            
+            data['annual_salary'] = 0 # TODO : A revoir par Tess
+            
+            # Traitement de l'adresse
+            data['job_location'] = data['job_location'].split('.')[0]
+            
+            data['job_location'] = data['job_location'].replace('télétravail', '')
+            data['job_location'] = data['job_location'].replace('temporaire', '')
+            data['job_location'] = data['job_location'].replace('hybrid remote', '')
+            data['job_location'] = data['job_location'].replace('in', '')
+            data['job_location'] = data['job_location'].replace('+ lieu', '')
+            data['job_location'] = data['job_location'].replace('+lieu', '')
+            data['job_location'] = data['job_location'].split('.')[0]
+            
+            location_data = re.sub(r'.\d+.|[+]','', data['job_location'])
+            
+            data['clean_location'] = location_data.split('-')[0].capitalize()
+            
+        return data
         
