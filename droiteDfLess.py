@@ -39,13 +39,6 @@ dicti = {0: 'python', 1: 'html', 2: 'css', 3: 'java', 4: 'flask',
          63: 'presto', 64: 'google analytic', 65: ' r '}
 
 url = 'https://fr.indeed.com/Emplois-developpeur?vjk=05c5d938a1fe276e'
-# url_b = 'https://fr.indeed.com/voir-emploi?jk=%s'%(record[0])
-
-# url_b = 'https://fr.indeed.com/viewjob?jk=daf6f8c39149c15e'
-# response = requests.get(url_b)
-# soup = BS(response.text, 'html.parser')
-# comment = soup.find('div','jobsearch-jobDescriptionText').text
-# # print(comment)
 
 records = []
 
