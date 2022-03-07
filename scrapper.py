@@ -186,8 +186,8 @@ class Scrapper():
             }
             data = self.cleanRecord(data)
             
-            if self.collec.count_documents({ "_id": record[0]}) == 0:
-                self.collec.insert_one(data)
+            #if self.collec.count_documents({ "_id": record[0]}) == 0:
+                #self.collec.insert_one(data)
     
     # Nettoyage des enregistrement, partie de Tess        
     def cleanRecord(self,data):
@@ -197,6 +197,12 @@ class Scrapper():
         
         # Si salary est renseigne
         if salary:
+            
+            per_hour = 'par heure' in salary
+            per_day = 'par jour' in salary
+            per_week = 'par semaine' in salary #par mois is a default value
+            per_month = 'par semaine' in salary
+            per_year = 'par an' in salary
             
             # Temps de travail
             if 'par heure' in salary:
@@ -212,22 +218,17 @@ class Scrapper():
                 
             # Remplacement
             salary_range = salary
-            salary_range = salary_range.replace('€', '')
-            salary_range = salary_range.replace('par heure', '')
-            salary_range = salary_range.replace('par an', '')
-            salary_range = salary_range.replace('par mois', '')
-            salary_range = salary_range.replace('par semaine', '')
-            salary_range = salary_range.replace('par jour', '')
-            salary_range = salary_range.replace('18,14', '')
-            salary_range = salary_range.replace(' ','')
+            salary_range = salary.replace(',', '')            
+            salary_range = salary.replace(r'[a-zA-Z]|[€]|[ ]', '')
             
             # min/max
-            data['min_salary'] =  salary_range.split('-')[0]
-            if len(salary_range.split('-')) > 1 :
-                data['max_salary'] = salary_range.split('-')[1]
+            if not not (salary_range.split('-')[0]):
+                data['min_salary'] =  salary_range.split('-')[0]
+                if len(salary_range.split('-')) > 1 :
+                    data['max_salary'] = salary_range.split('-')[1]
                 
             # moyenne salaire
-            if int(data['min_salary']) > 0 and int(data['max_salary']) > 0:
+            if data['min_salary'] and data['max_salary']:
                 data['mean_salary'] = statistics.mean([int(data['min_salary']),int(data['max_salary'])])
             
             # Calcul salaire mensuel
