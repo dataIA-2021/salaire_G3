@@ -101,6 +101,9 @@ for card in cards:
         'company': record[2],
         'job_location': record[3],
         'clean_location': '',
+        'presence':0,
+        'remote':0,
+        'hybrid':0,
         'salary': record[4],
         'per_hour': 0,
         'per_day': 0,
@@ -188,7 +191,22 @@ for card in cards:
             data[dicti_tech[i]] = 1
         else : 
             data[dicti_tech[i]] = 0
-            
+    
+    # recherche du type de job en télétravail, hybride ou présence si le clean_location est vide
+    if (data['clean_location'] == '')==True:
+        remote = re.findall(r"t[eéè]l[eéè]travail", comment)
+        if remote:
+            data['remote']=1
+            data['clean_location']= remote[0]
+        else:
+            hybrid = re.findall(r'hybrid|hybride', comment)
+            if hybrid:
+                data['hybrid']=1
+                data['clean_location']= hybrid[0]
+            else:
+                data['presence']=1    
+                
+
 # detection du salaire dans le bloc de droite
     # pour les salaires sous la forme 32 - 32 k€
     if (data['salary'] == '')==True:
@@ -202,7 +220,7 @@ for card in cards:
             sal = round(sal)
             data['min_salary'] = first_sal
             data['max_salary'] = second_sal
-            data['annual_salary'] = data['mean_salary'] = data['per_year'] = sal
+            data['annual_salary'] = sal
             data['monthly_salary'] = round(sal/12)
             data['per_hour'] = round(data['mean_salary']/1607, 2)
             data['per_day'] = round((data['mean_salary']/52)/5,2)
@@ -215,7 +233,7 @@ for card in cards:
             salary_split = salary_split.replace('k€', '')
             sal = int(salary_split[4]+salary_split[5])*1000
             data['min_salary'] = data['max_salary'] = sal
-            data['annual_salary'] = data['mean_salary'] = data['per_year'] = sal
+            data['annual_salary'] = sal
             data['monthly_salary'] = round(sal/12)
             data['per_hour'] = round(data['mean_salary']/1607, 2)
             data['per_day'] = round((data['mean_salary']/52)/5,2)
@@ -254,11 +272,11 @@ for card in cards:
                     elif max_len>4:                   
                         data['min_salary'] = min_sal
                         data['max_salary'] = max_sal
-                        data['annual_salary'] = data['mean_salary'] = data['per_year'] = round((data['max_salary']+data['min_salary'])/2)
+                        data['annual_salary']= round((data['max_salary']+data['min_salary'])/2)
                     else:
                         data['min_salary'] = min_sal*12
                         data['max_salary'] = max_sal*12
-                        data['annual_salary'] = data['mean_salary'] = data['per_year'] = round((data['max_salary']+data['min_salary'])/2)
+                        data['annual_salary'] =  round((data['max_salary']+data['min_salary'])/2)
                     data['per_hour'] = round(data['mean_salary']/1607, 2)
                     data['per_day'] = round((data['mean_salary']/52)/5,2)
                     data['per_month'] = data['monthly_salary']
