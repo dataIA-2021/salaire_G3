@@ -1,0 +1,395 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Ingreed</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='pagescroll.css') }}" />
+		<script src="{{ url_for('static', filename='chart.min.js') }}"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<!--<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" type="text/css">-->
+	</head>
+
+	<body>
+	<div id="pagescroll">
+		<div class="section welcome">
+		   	<h1>Ingreed</h1>
+		   	<img src="{{ url_for('static', filename='man.png') }}">
+		   	<div class="area" >
+            <ul class="circles">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+            </ul>
+    	</div >
+		</div>
+	    <div class="section team">
+	    	<div class="photos">
+	    		<img src="{{ url_for('static', filename='victorien.png') }}">
+	    		<img src="{{ url_for('static', filename='francois.png') }}">
+	    		<img src="{{ url_for('static', filename='clara.png') }}">
+	    		<img src="{{ url_for('static', filename='tess.png') }}">
+	    	</div>
+			<div class="perspective-text">
+				<div class="perspective-line">
+					<p>Notre equipe</p>
+					<p>Victorien</p>
+				</div>
+				<div class="perspective-line">
+					<p>Victorien</p>
+					<p>Francois</p>
+				</div>
+				<div class="perspective-line">
+					<p>Francois</p>
+					<p>Clara</p>
+				</div>
+				<div class="perspective-line">
+					<p>Clara</p>
+					<p>Tess</p>
+				</div>
+				<div class="perspective-line">
+					<p>Tess</p>
+				</div>
+			</div>
+	    </div>
+	    <div class="section screen">
+	    	<span>trello</span>
+	    	<img src="{{ url_for('static', filename='trello.png') }}">
+	    </div>
+	    <div class="section">
+	    	diagram
+	    	<img src="{{ url_for('static', filename='diagram.png') }}">
+	    </div>
+	    <div class="section library">
+	    	<span >Librairies utilisées</span>
+	    	<span style="color:rgb(255, 99, 132)">BeautifulSoup</span>
+	    	<span style="color:rgb(54, 162, 235)">pymongo</span>
+			<span style="color:rgb(255, 206, 86)">sklearn</span>
+	    	<span style="color:rgb(75, 192, 192)">Flask</span>
+	    	<span style="color:rgb(153, 102, 255)">chart js</span>
+	    </div>
+	    <div class="section screen">
+	    	<div>
+	    		<span>Class</span>
+	    		<span>Scrapper</span>
+	    	</div>
+	    	<img src="{{ url_for('static', filename='scrapper.png') }}">
+	    </div>
+	    <div class="section screen">
+	    	<span>MongoDB</span>
+	    	<img src="{{ url_for('static', filename='mongo.png') }}">
+	    </div>
+	    <div class="section screen">
+	    	<span>ML</span>
+	    	<img src="{{ url_for('static', filename='model.png') }}">
+	    </div>
+		<div class="section chart">
+	    	
+			<div class="chartBox">
+				<div>
+					<canvas id="pieChart"></canvas>
+				</div>
+			</div>
+			<div class="chartBox">
+				<div>
+					<canvas id="barChart1"></canvas>
+				</div>
+			</div>
+
+			<div class="chartBox">
+				<div>
+					<canvas id="barChart2"></canvas>
+				</div>
+			</div>
+
+			<div class="chartBox">
+				<div>
+					<canvas id="barChart3"></canvas>
+				</div>
+			</div>
+
+			<script>
+				// setup
+				const dataPie = {
+					labels: ['Non indiqué','indiqué'],
+				  	datasets: [{
+				    	label: '% proportions des salaires',
+				    	data: [79, 21],
+				    	backgroundColor: [
+				      		'rgb(255, 99, 132)',
+				      		'rgb(54, 162, 235)'
+				    	]
+				    	// hoverOffset: 4
+				  	}]
+				};
+
+				// config
+				const configPie = {
+					type: 'pie',
+				    data: dataPie,
+				    options: {
+				    	responsive: true,
+            			maintainAspectRatio : false,
+            			plugins: {
+				            title: {
+				                display: true,
+				                text: 'Proportions des salaires indiqués'
+				            }
+				        }
+            		}
+				};
+
+				const dataBar1 = {
+					labels: ['Paris', 'La Defense', 'Tours', 'Nantes', 'Toulouse'],
+				        datasets: [{
+				            label: 'Offres par ville',
+				            data: [217, 17, 9, 7, 19],
+				            backgroundColor: [
+				                'rgba(255, 99, 132, 1)',
+				                'rgba(54, 162, 235, 1)',
+				                'rgba(255, 206, 86, 1)',
+				                'rgba(75, 192, 192, 1)',
+				                'rgba(153, 102, 255, 1)'
+				            ],
+				            borderWidth: 1
+				        }]
+				};
+
+				
+
+				const configBar1 = {
+					type: 'bar',
+				    data: dataBar1,
+				    options: {
+				        scales: {
+				            y: {
+				                beginAtZero: true
+				            }
+				        }
+				    }
+				};
+
+				const dataBar2 = {
+					labels: ['data analyst', 'data scientist', 'developpeur', 'business intelligence', 'ingenieur', 'manager'],
+				        datasets: [{
+				            label: 'Offres par job',
+				            data: [292, 225, 367, 101, 265, 5],
+				            backgroundColor: [
+				                'rgba(255, 99, 132, 1)',
+				                'rgba(54, 162, 235, 1)',
+				                'rgba(255, 206, 86, 1)',
+				                'rgba(75, 192, 192, 1)',
+				                'rgba(153, 102, 255, 1)',
+				                'rgba(255, 159, 64, 1)'
+				            ],
+				            borderWidth: 1
+				        }]
+				};
+
+				const configBar2 = {
+					type: 'bar',
+				    data: dataBar2,
+				    options: {
+				        scales: {
+				            y: {
+				                beginAtZero: true
+				            }
+				        }
+				    }
+				};
+
+				const dataBar3 = {
+					labels: ['cdi', 'cdd', 'stage', 'freelance', 'alternance'],
+				        datasets: [{
+				            label: 'Offres par contrat',
+				            data: [37, 4, 98, 39, 49],
+				            backgroundColor: [
+				                'rgba(255, 99, 132, 1)',
+				                'rgba(54, 162, 235, 1)',
+				                'rgba(255, 206, 86, 1)',
+				                'rgba(75, 192, 192, 1)',
+				                'rgba(153, 102, 255, 1)'
+				            ],
+				            borderWidth: 1
+				        }]
+				};
+
+				
+
+				const configBar3 = {
+					type: 'bar',
+				    data: dataBar3,
+				    options: {
+				        scales: {
+				            y: {
+				                beginAtZero: true
+				            }
+				        }
+				    }
+				};
+
+				// render init block
+				const pieChart = new Chart( 
+					document.getElementById('pieChart'),
+					configPie
+				);
+
+				const barChart1 = new Chart( 
+					document.getElementById('barChart1'),
+					configBar1
+				);
+
+				const barChart2 = new Chart( 
+					document.getElementById('barChart2'),
+					configBar2
+				);
+
+				const barChart3 = new Chart( 
+					document.getElementById('barChart3'),
+					configBar3
+				);
+		    
+			</script>
+
+		</div>
+	    <div class="section prediction">
+	    	<div>
+	    		<h2>Prediction : </h2>
+	    	</div>
+	    	<form action="/prediction" id="prediction">
+				<label for="job">Job :</label>
+				<select id="job" name="job">
+					<option value="data analyst">data analyst</option>
+					<option value="data scientist">data scientist</option>
+					<option value="developpeur">developpeur</option>
+					<option value="business intelligence">business intelligence</option>
+					<option value="ingenieur">ingenieur</option>
+					<option value="manager">manager</option>
+					<option value="database administrator">database administrator</option>
+				</select>
+
+				<label for="city">Ville :</label>
+				<input type="text" id="city" name="city" size="10">
+
+				<label for="exp">Expérience :</label>
+				<select id="exp" name="exp">
+					<option value="0">beginner</option>
+					<option value="1">junior</option>
+					<option value="2">senior</option>
+				</select>
+
+				<label for="contract">Contrat :</label>
+				<select id="contract" name="contract">
+					<option value="stage">Stage/alternance</option>
+					<option value="cdi">CDI</option>
+				</select>
+
+				<label for="location">Lieu :</label>
+				<select id="location" name="location">
+					<option value="presence">Sur site</option>
+					<option value="remote">Remote</option>
+					<option value="hybrid">Hybrid</option>
+				</select>
+
+				<label for="interval">Intervalle :</label>
+				<select id="interval" name="interval">
+					<option value="per_year">Par an</option>
+					<option value="per_month">Par mois</option>
+					<option value="per_week">Par semaine</option>
+					<option value="per_day">Par jour</option>
+					<option value="per_hour">Par heure</option>
+				</select>
+
+				<label for="manager" class="skill">Gestion de projet (nb de compétences) :</label>
+				<small>ex : ci/cd, kanban, scrum, agile, anglais etc...</small>
+				<select id="manager" name="manager">
+					<option value="0">0</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+				</select>
+
+				<label for="big_data" class="skill">Big data (nb de compétences) :</label>
+				<small>ex : apache hadoop, aws, azure, cordova, docker etc...</small>
+				<select id="big_data" name="big_data">
+					<option value="0">0</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+				</select>
+
+				<label for="front_back" class="skill">Front back (nb de compétences) :</label>
+				<small>ex : python, css, javascript, php, nodejs etc...</small>
+				<select id="front_back" name="front_back">
+					<option value="0">0</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+				</select>
+
+				<label for="data_analytics" class="skill">Data analytics (nb de compétences) :</label>
+				<small>ex : excel, mongoDB, mysql, postgreSQL, google anal. etc...</small>
+				<select id="data_analytics" name="data_analytics">
+					<option value="0">0</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+  							
+
+			  	<input type="submit" value="Go !">
+			  	<div id="result"></div>
+			</form>
+	    </div>
+	    <div class="section">
+	    	<img src="{{ url_for('static', filename='merci.jpg') }}">
+	    </div>
+	</div>
+	<script src="{{ url_for('static', filename='pagescroll.js') }}"></script>
+	<script>
+		new PageScroll('#pagescroll', { /* Options goes here */ })
+
+	    // Callback de validation (submit)
+	    $('#prediction').submit(function() {
+
+			// Requète GET sur /detect avec ajout du paramètre (sms)
+			$.get('/prediction?'+$(this).serialize(), function(data){
+				// MaJ du div#result
+				$('#result').html("<b>Salaire :</b> "+Math.round(data.salary)+" € (variation de ~2200 €)");
+	      	})
+	    
+		    // empèche le chargement de la page suite au submit
+		    return false;
+	    });
+
+	 </script>
+	 <script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-46156385-1', 'cssscript.com');
+		ga('send', 'pageview');
+	</script>
+	</body>
+</html>
