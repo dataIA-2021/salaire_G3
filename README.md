@@ -2,7 +2,7 @@
 
 http://victorien.pythonanywhere.com/
 
-Trello: hhttps://trello.com/b/4YPhuubu/data-salaires
+Trello: https://trello.com/b/4YPhuubu/data-salaires
 
 
 Installation environnement:
